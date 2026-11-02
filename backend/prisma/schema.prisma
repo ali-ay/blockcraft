@@ -1,0 +1,43 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 1. Genel Site Ayarları (Logo, İletişim, Sosyal Medya)
+model SiteSetting {
+  id        Int      @id @default(1)
+  siteName  String
+  logoUrl   String?
+  phone     String?
+  email     String?
+  socials   Json?    // Sosyal medya linkleri (JSON formatında)
+}
+
+// 2. Dinamik Sayfalar (Anasayfa, Hakkımızda vb.)
+model Page {
+  id          String      @id @default(uuid())
+  slug        String      @unique // Örn: "hakkimizda", "iletisim"
+  title       String      // Sayfa başlığı
+  seoTitle    String?
+  seoDesc     String?
+  isPublished Boolean     @default(true)
+  blocks      PageBlock[] // Sayfanın içindeki Lego parçaları (Modüller)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+// 3. Modüller / Bloklar (Tasarım bağımsız içerik alanı)
+model PageBlock {
+  id        String   @id @default(uuid())
+  pageId    String
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  
+  blockType String   // Örn: "HERO_BANNER", "FEATURE_GRID", "FAQ_ACCORDION"
+  order     Int      // Sayfadaki sırası: 1, 2, 3...
+  content   Json     // Modülün içeriği (Başlık, resim, buton linkleri vb.)
+  isActive  Boolean  @default(true)
+}
